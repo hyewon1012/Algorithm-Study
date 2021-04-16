@@ -57,5 +57,35 @@ public class BOJ_15961_회전초밥 {
 		}
 		return res;
 	}
+	
+	private static int slidingWindow() {
+		int ans = 0;
+		int cnt = 0;
+		for (int i = 0; i < k; i++) { // 처음 0번부터 k개만큼 먹기
+			picked[sushi[i]]++;
+			if(picked[sushi[i]] == 1) {
+				cnt++;
+			}
+		}
+		
+		for (int i = k; i < N+k; i++) { //한바퀴다돌고 맨끝에서 k개만큼 먹을때까지
+			//왼쪽 슬라이딩
+			picked[sushi[i]]--;
+			if(picked[sushi[i]]==0) cnt--;
+			
+			//오른쪽 슬라이딩
+			picked[sushi[i]]++;
+			if(picked[sushi[i]]==1) cnt++;
+			
+			//쿠폰 적용해보기
+			if(picked[c]==0) {
+				ans = Math.max(ans, cnt+1);
+			}else {
+				ans = Math.max(ans, cnt);
+			}
+			
+		}
+		return ans;
+	}
 
 }
