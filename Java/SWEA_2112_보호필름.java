@@ -11,8 +11,9 @@ import java.util.StringTokenizer;
 public class SWEA_2112_보호필름 {
 	static int D,W,K;
 	static int[][] map;
+	static int[][] copymap;
 	
-	static int[] candidate; // 각 row별 약품 투약 상태 리스트 (-1 : 투여안함,  0: a 투여,  1 : b 투여)
+	static int[] statusByRow; // 각 row별 약품 투약 상태 리스트 (-1 : 투여안함,  0: a 투여,  1 : b 투여)
 	static int ans;
 	public static void main(String[] args) throws NumberFormatException, IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -26,7 +27,8 @@ public class SWEA_2112_보호필름 {
 			K = Integer.parseInt(st.nextToken());
 			
 			map = new int[D][W];
-			candidate = new int[D];
+			copymap = new int[D][W];
+			statusByRow = new int[D];
 			for (int i = 0; i < D; i++) {
 				st = new StringTokenizer(br.readLine(), " ");
 				for (int j = 0; j < W; j++) {
@@ -53,7 +55,7 @@ public class SWEA_2112_보호필름 {
 		}
 		
 		for (int i = -1; i < 2; i++) {
-			candidate[row] = i;
+			statusByRow[row] = i;
 			if(i == -1) {
 				dfs(row+1, cnt);
 			}else {
@@ -61,70 +63,35 @@ public class SWEA_2112_보호필름 {
 			}
 		}
 	}
-
-	//D개중 1개 2개...D개 모두 약품 투입해보기
-	private static void solve(int tryBit) {
-		List<Integer> candidate = new ArrayList<>(); // 약품 투입할 행 리스트
-		for (int i = 0; i < tryBit; i++) {
-			for (int j = 0; j < D; j++) {
-				if((i & (1<<j)) > 0) {
-					candidate.add(j);
-				}
-			}
-			int cnt = candidate.size();
-			
-//			for (int j = 0; j < cnt; j++) {
-//				System.out.print(candidate.get(j)+" ");
-//			}
-//			System.out.println();
-			
-			if(ans == 0) return; // 더 이상 탐색하지 않음
-			
-			//copy();
-			
-			if(isContinue()) {
-				if(ans > cnt) ans = cnt;
-			}else {
-				change(candidate);
-				if(isContinue()) {
-					if(ans > cnt) ans = cnt;
-				}
-				
-			}
-			
-			candidate.clear();
-		}
-		
-	}
 	
-	// candidate에 있는 열 특성 모두 바꿈 3개면 000 0이 A 1이 B 001~111
-	// 모든 열 K만큼 연속하는지 확인
-	//candidate에 있는 번호 행 A,B 바꾸는 모든 경우
-	private static void change(List<Integer> candidate) {
-		
-		int size = candidate.size();
-		int tryBit = 1<<size;
-		
-		if(size == 0) return;
-		
-		List<Integer> change = new LinkedList<>();
-		for (int i = 0; i < tryBit; i++) {
-			for (int j = 0; j < size; j++) {
-				change.add((i&(1<<j)));
+	//행을 선택하는 부분집합
+	private static void solve2(int row, int cnt) {
+		if(cnt >= ans) return;
+		if(row == D) {
+			if(isContinue()) {
+				ans = Math.min(ans, cnt);
 			}
-			for (int j = 0; j < size; j++) {
-				System.out.println(change.get(j)+" ");
-			}
-			for (int j = 0; j < size; j++) {
-				int rownum = candidate.get(j);
-				for (int x = 0; x < D; x++) {
-					//copymap[rownum][x] = change.get(j);
-				}
-			}
+			return;
 		}
+		//1.아무것도 투약 안함
+		solve2(row+1, cnt);
 		
+		//2.A투약
+		for (int i = 0; i < W; i++) {
+			map[row][i] = 0;
+		}
+		solve2(row+1, cnt+1);
 		
+		//3.B투약
+		for (int i = 0; i < W; i++) {
+			map[row][i] = 1;
+		}
+		solve2(row+1, cnt+1);
 		
+		//상태배열 원복
+		for (int i = 0; i < W; i++) {
+			map[row][i] = copymap[row][i];
+		}
 		
 	}
 	
@@ -133,15 +100,15 @@ public class SWEA_2112_보호필름 {
 		for (int x = 0; x < W; x++) {
 			int cnt = 1; //연속하는원소 카운트
 			for (int y = 0; y < D-1; y++) {
-				now = candidate[y] == -1 ? map[y][x] : candidate[y];
-				next = candidate[y+1] == -1 ? map[y+1][x] : candidate[y+1];
+				now = statusByRow[y] == -1 ? map[y][x] : statusByRow[y];
+				next = statusByRow[y+1] == -1 ? map[y+1][x] : statusByRow[y+1];
 				if(now == next) {
 					cnt++;
 					if(cnt >= K) break;
 					
 				}
 				else {
-					cnt=1;
+					cnt=1;//초기화되서 다시 카운트 시작
 				}
 				
 			}
